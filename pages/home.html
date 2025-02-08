@@ -6,6 +6,7 @@
     <title>Online Chat</title>
     <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-database.js"></script>
+    <script src="https://unpkg.com/@tailwindcss/browser@4"></script>
     <style>
         body { font-family: Arial, sans-serif; text-align: center; }
         #chat-box { width: 50%; height: 300px; overflow-y: scroll; border: 1px solid #000; margin: 10px auto; padding: 10px; }
@@ -13,44 +14,58 @@
         button { padding: 5px 10px; }
     </style>
 </head>
-<body>
-    <h2>Online Chat</h2>
-    <input type="text" id="username" placeholder="Enter your username">
-    <div id="chat-box"></div>
-    <input type="text" id="message" placeholder="Type a message...">
-    <button onclick="sendMessage()">Send</button>
+<body class="bg-[#003249] flex flex-col items-center">
+    <h2 class="text-[#CCDBDC] font-bold text-[20px]">Online Chat</h2>
+    <div id="chat-box" class="bg-white"></div>
+    <div class="max-w-96 w-full">
+        <input type="text" id="message-input" class="bg-white max-w-[200px] w-full" placeholder="Type a message...">
+        <button class="bg-[#9AD1D4]" onclick="sendMessage()">Send</button>
+    </div>
     
-    <script>
-        const firebaseConfig = {
-            apiKey: "YOUR_API_KEY",
-            authDomain: "YOUR_AUTH_DOMAIN",
-            databaseURL: "YOUR_DATABASE_URL",
-            projectId: "YOUR_PROJECT_ID",
-            storageBucket: "YOUR_STORAGE_BUCKET",
-            messagingSenderId: "YOUR_MESSAGING_SENDER_ID",
-            appId: "YOUR_APP_ID"
-        };
-        
-        firebase.initializeApp(firebaseConfig);
-        const db = firebase.database();
-        const chatBox = document.getElementById("chat-box");
-        const messageInput = document.getElementById("message");
-        const usernameInput = document.getElementById("username");
-        
-        function sendMessage() {
-            const message = messageInput.value;
-            const username = usernameInput.value || "Anonymous";
-            if (message.trim() === "") return;
-            db.ref("messages").push().set({ username: username, text: message });
-            messageInput.value = "";
-        }
-        
-        db.ref("messages").on("child_added", snapshot => {
-            const msg = document.createElement("div");
-            msg.innerText = snapshot.val().username + ": " + snapshot.val().text;
-            chatBox.appendChild(msg);
-            chatBox.scrollTop = chatBox.scrollHeight;
-        });
-    </script>
+    
 </body>
+<script>
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.3.0/firebase-app.js";
+        import { getAnalytics } from "https://www.gstatic.com/firebasejs/11.3.0/firebase-analytics.js";
+        const firebaseConfig = {
+          apiKey: "AIzaSyACVrejrFZNo1DAdCbM2YOvqFay1G5u0z4",
+          authDomain: "salom-uzchat.firebaseapp.com",
+          projectId: "salom-uzchat",
+          storageBucket: "salom-uzchat.firebasestorage.app",
+          messagingSenderId: "307849185096",
+          appId: "1:307849185096:web:1f1231504aa4a5af07557d",
+          measurementId: "G-DTGE85MCQB"
+        };
+
+        // Initialize Firebase
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.firestore();
+
+        function sendMessage() {
+            const messageInput = document.getElementById("message-input");
+            const messageText = messageInput.value;
+
+            if (messageText.trim() !== "") {
+                db.collection("messages").add({
+                    text: messageText,
+                    timestamp: firebase.firestore.FieldValue.serverTimestamp()
+                });
+                messageInput.value = "";
+            }
+        }
+
+        function loadMessages() {
+            db.collection("messages").orderBy("timestamp").onSnapshot(snapshot => {
+                const chatBox = document.getElementById("chat-box");
+                chatBox.innerHTML = "";
+                snapshot.forEach(doc => {
+                    const message = document.createElement("p");
+                    message.textContent = doc.data().text;
+                    chatBox.appendChild(message);
+                });
+            });
+        }
+
+        loadMessages();
+</script>
 </html>
